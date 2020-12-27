@@ -1,0 +1,12 @@
+# yaml 配置实例
+version: '3'
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "9999:80"
+    volumes:
+      - /Users/blackie/Desktop/repo/nginx-simple-auth/nginx/config/default.conf:/etc/nginx/nginx.conf:ro
+      - /Users/blackie/Desktop/repo/nginx-simple-auth/nginx/html:/usr/share/nginx/html
+      - /Users/blackie/Desktop/repo/nginx-simple-auth/nginx/module/nginx-http-auth-digest-master:/etc/nginx/nginx-http-auth-digest-master
+    # command: ./configure --add-module=/nginx-http-auth-digest-master
