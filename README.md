@@ -54,6 +54,7 @@ service nginx -V
 ```
 
 ## 2. setup nginx-http-auth-digest
+
 ### nginx config
 
 ```sh
@@ -66,16 +67,29 @@ events {
 
 
 http {
-    server {
-        auth_digest_user_file /usr/local/nginx/auth/passwd.digest;
-        auth_digest_shm_size 4m;   # the storage space allocated for tracking active sessions
+    include       mime.types;
+    default_type  application/octet-stream;
 
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+    server {
         listen       80;
         server_name  localhost;
 
+        auth_digest_user_file /usr/local/nginx/auth/passwd.digest;
+        auth_digest_shm_size 4m;  
+        
         location / {
             root   html;
-            index  index.html index.htm;
+            index  200.html index.html index.htm;
+
             auth_digest 'This is not for you';
             auth_digest_timeout 30s; # allow users to wait 1 minute between receiving the
                                     # challenge and hitting send in the browser dialog box
@@ -88,17 +102,22 @@ http {
             auth_digest_evasion_time 60s;    
             # The number of failed authentication attempts from a client address before the module enters evasive tactics. For evasion purposes, only network clients are tracked, and only by address (not including port number). A successful authentication clears the counters.
             auth_digest_maxtries 5;
-
             # 於 Header 加入不需要 Cache 指令
             add_header Cache-Control no-cache;  
             add_header Cache-Control private;
         }
 
+        error_page  401              /401.html;
+        error_page  403              /403.html;
+        # redirect server error pages to the static page /50x.html
+        #
         error_page   500 502 503 504  /50x.html;
         location = /50x.html {
             root   html;
         }
+
     }
+
 }
 ```
 
@@ -119,30 +138,30 @@ digest under auth/passwd.digest : `blackie:This is not for you:c9e9a18e180b9c209
 
 ## Start and stop Nginx
 
-Starting Nginx
-Assuming that nginx was configured to install to the default location of /usr/local/nginx…….
+- Starting Nginx
+
+    Assuming that nginx was configured to install to the default location of /usr/local/nginx…….
+
+    ```sh
+    sudo /usr/local/nginx/sbin/nginx
+    ```
+
+- Stopping Nginx
+
+    Assuming that nginx was configured to install to the default location of /usr/local/nginx…….
+
+    ```sh
+    sudo /usr/local/nginx/sbin/nginx -s stop
+    ```
+
+## Launch Nginx via Dockerfile and docker-compose
 
 ```sh
-sudo /usr/local/nginx/sbin/nginx
-```
+# build image
+docker build -t blackie/nginx-auth-digest:latest . 
 
-Stopping Nginx
-Assuming that nginx was configured to install to the default location of /usr/local/nginx…….
-
-```sh
-sudo /usr/local/nginx/sbin/nginx -s stop
-```
-
-## Launch Nginx via Docker
-
-```shell
-docker run --name my-nginx -p 9999:80 -v /Users/blackie/Desktop/repo/nginx-simple-auth/nginx/config/default.conf:/etc/nginx/nginx.conf:ro -v /Users/blackie/Desktop/repo/nginx-simple-auth/nginx/html:/usr/share/nginx/html nginx
-
-docker run --name nginx -p 9998:80 -v //Users/ct.tsai/Desktop/Repo/github/nginx-simple-auth/nginx/config/default.conf:/etc/nginx/nginx.conf:ro -v //Users/ct.tsai/Desktop/Repo/github/nginx-simple-auth/nginx/html:/usr/share/nginx/html nginx
-blackie/nginx-auth-digest:latest
-
-# 精簡版的 docker 映像檔案(如 Alpine） 没有内置 bash 的。所以用 /bin/sh
-docker exec -it {container sha} /bin/sh
+# run container
+docker-compose up
 ```
 
 ## Ref
