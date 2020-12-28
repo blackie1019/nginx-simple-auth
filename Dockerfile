@@ -1,15 +1,36 @@
-FROM ubuntu:21.04
+# 1. Compiling nginx module
+# FROM ubuntu:21.04 as builder
+FROM ubuntu:21.04 as builder
+WORKDIR /tmp
 
 # 更新
-RUN apt update -y
+RUN apt-get update && apt-get upgrade -y
 
-RUN cd /
+# 安裝檔案取得必要套件
+RUN apt-get install curl zip -y
 
-ADD jdk-8u152-linux-x64.tar.gz /
+# 安裝建置環境必要套件
+RUN apt-get install libtool build-essential libpcre3 libpcre3-dev zlib1g-dev -y 
 
-RUN wget http://apache.stu.edu.tw/tomcat/tomcat-7/v7.0.82/bin/apache-tomcat-7.0.82.tar.gz
-RUN tar zxvf apache-tomcat-7.0.82.tar.gz
+# 下載 nginx & nginx-http-auth-digest
+RUN curl -O http://nginx.org/download/nginx-1.19.6.tar.gz \
+  && tar xvfz nginx-1.19.6.tar.gz \
+  && curl -L -o nginx-http-auth-digest-master.zip https://github.com/atomx/nginx-http-auth-digest/archive/master.zip \
+  && unzip nginx-http-auth-digest-master.zip
 
-ENV JAVA_HOME=/jdk1.8.0_152
-ENV PATH=$PATH:/jdk1.8.0_152/bin
-CMD ["/apache-tomcat-7.0.82/bin/catalina.sh", "run"]
+# 設定與編譯 nginx
+RUN cd nginx-1.19.6 \
+  && ./configure --add-module=../nginx-http-auth-digest-master \
+  && make \
+  && make install
+
+# # 下載 init-deb.sh並設定開機預設服務
+ENV PATH /usr/local/nginx/sbin:$PATH
+# RUN cd /tmp && curl -L -o init-deb.sh https://www.linode.com/docs/assets/660-init-deb.sh && mv init-deb.sh /etc/init.d/nginx && chmod +x /etc/init.d/nginx && /usr/sbin/update-rc.d -f nginx defaults
+
+# PORTS
+EXPOSE 80
+EXPOSE 443
+
+# 啟動
+CMD ["nginx", "-g", "daemon off;"]

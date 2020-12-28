@@ -2,7 +2,7 @@
 
 Simple authenticating by Nginx
 
-## From source code
+## 1. Compiling nginx static module from source code
 
 ```sh
 mkdir src&& cd src
@@ -20,8 +20,7 @@ cd nginx-1.19.6
 make && make install
 ```
 
-
-### troubleshooting on macOS
+### Troubleshooting on macOS
 
 Install automake and autoconf on your Unix.
 
@@ -35,7 +34,7 @@ if `xcrun: error: invalid active developer path (/Library/Developer/CommandLineT
 xcode-select --install
 ```
 
-### troubleshooting on ubuntu
+### Troubleshooting on ubuntu
 
 ```sh
 apt-get update && apt-get upgrade -y
@@ -43,11 +42,19 @@ apt-get install curl zip -y
 
 apt-get install libtool build-essential libpcre3 libpcre3-dev zlib1g-dev -y 
 
-#check version
-sudo /usr/local/nginx/sbin/nginx -V
+# setup as service 
+curl -L -o init-deb.sh https://www.linode.com/docs/assets/660-init-deb.sh
+mv init-deb.sh /etc/init.d/nginx
+chmod +x /etc/init.d/nginx
+/usr/sbin/update-rc.d -f nginx defaults
+service nginx stop 
+
+# check version
+service nginx -V
 ```
 
-### Config
+## 2. setup nginx-http-auth-digest
+### nginx config
 
 ```sh
 #user  nobody;
@@ -93,9 +100,24 @@ http {
         }
     }
 }
-
 ```
-### Start and Stop Nginx
+
+### Generate .giest
+
+https://websistent.com/tools/htdigest-generator-tool/
+
+Sample:
+
+- Username:
+  blackie
+- Realm:
+  This is not for you
+- Password:
+  pass.123
+
+digest under auth/passwd.digest : `blackie:This is not for you:c9e9a18e180b9c2097c66ed4239195aa`
+
+## Start and stop Nginx
 
 Starting Nginx
 Assuming that nginx was configured to install to the default location of /usr/local/nginx…….
@@ -111,30 +133,18 @@ Assuming that nginx was configured to install to the default location of /usr/lo
 sudo /usr/local/nginx/sbin/nginx -s stop
 ```
 
-### Generate .giest
-
-https://websistent.com/tools/htdigest-generator-tool/
-
 ## Launch Nginx via Docker
 
 ```shell
 docker run --name my-nginx -p 9999:80 -v /Users/blackie/Desktop/repo/nginx-simple-auth/nginx/config/default.conf:/etc/nginx/nginx.conf:ro -v /Users/blackie/Desktop/repo/nginx-simple-auth/nginx/html:/usr/share/nginx/html nginx
 
-docker run --name my-nginx -p 9999:80 ubuntu:21.04
+docker run --name nginx -p 9998:80 -v //Users/ct.tsai/Desktop/Repo/github/nginx-simple-auth/nginx/config/default.conf:/etc/nginx/nginx.conf:ro -v //Users/ct.tsai/Desktop/Repo/github/nginx-simple-auth/nginx/html:/usr/share/nginx/html nginx
+blackie/nginx-auth-digest:latest
 
-```
-
-## module
-
-https://github.com/atomx/nginx-http-auth-digest
-
-## Run
-
-```sh
 # 精簡版的 docker 映像檔案(如 Alpine） 没有内置 bash 的。所以用 /bin/sh
 docker exec -it {container sha} /bin/sh
 ```
 
 ## Ref
 
-- https://blog.51cto.com/marvin89/2121017 
+- https://github.com/atomx/nginx-http-auth-digest
