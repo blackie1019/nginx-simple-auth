@@ -2,6 +2,43 @@
 
 Simple authenticating by Nginx
 
+http://localhost:9999
+
+---
+
+This is adopt `RFC 2617 Digest Authentication`, it can't kick client due to browser cache when session timeout. But after browser cache flush(normally `300 sec`) you can try it again. You can check the access log under `nginx/logs/`.
+
+About HTTP Authentication:
+
+- Basic: RFC 2617 (1999) -> RFC 7617 (2015)
+
+  **問題:**
+
+  - Server只能確認帳號密碼，無法控制例如登入時效（session），只能靠browser的cookie expiration
+  - Attacker可以Decode header並得到username和password
+  - Replay attack
+
+- Digest: RFC 2069 (1997) -> RFC 2617 (1999) -> RFC 7617 (2015)
+
+  **好處:**
+
+  - 可以加入其他資訊，如URI可以控制File-level的存取
+  - 加入Nonce，防止了Chosen plaintext attack和Replay attack
+
+  **問題:**
+
+  - 要先取得nonce，所以需要多一個Request
+  - Server依然不能控制user session
+
+- OAuth 1.0 (Twitter, 2007)
+- OAuth 2.0 (2012)
+- Bearer (OAuth 2.0): RFC 6750 (2012)
+- JSON Web Tokens (JWT): RFC 7519 (2015)
+
+Ref:
+
+- [MDN - HTTP authentication](https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication)
+- [開發者必備知識 - HTTP認證（HTTP Authentication）](https://carsonwah.github.io/http-authentication.htmlhttps://carsonwah.github.io/http-authentication.html)
 ## 1. Compiling nginx static module from source code
 
 ```sh
@@ -136,7 +173,7 @@ Sample:
 
 digest under auth/passwd.digest : `blackie:This is not for you:c9e9a18e180b9c2097c66ed4239195aa`
 
-## Start and stop Nginx
+## 3. Start and stop Nginx
 
 - Starting Nginx
 
