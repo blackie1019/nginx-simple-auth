@@ -13,11 +13,38 @@ curl -L -o nginx-http-auth-digest-master.zip https://github.com/atomx/nginx-http
 unzip nginx-http-auth-digest-master.zip
 
 cd nginx-1.19.6
-./configure --add-module=/Users/blackie/Desktop/repo/nginx-simple-auth/src/nginx-http-auth-digest-master
+./configure --add-module=../nginx-http-auth-digest-master
 ```
 
 ```sh
-make && sudo make install
+make && make install
+```
+
+
+### troubleshooting on macOS
+
+Install automake and autoconf on your Unix.
+
+```sh
+brew install autoconf automake libtool pcre 
+```
+
+if `xcrun: error: invalid active developer path (/Library/Developer/CommandLineTools), missing xcrun at: /Library/Developer/CommandLineTools/usr/bin/xcrun`
+
+```sh
+xcode-select --install
+```
+
+### troubleshooting on ubuntu
+
+```sh
+apt-get update && apt-get upgrade -y
+apt-get install curl zip -y
+
+apt-get install libtool build-essential libpcre3 libpcre3-dev zlib1g-dev -y 
+
+#check version
+sudo /usr/local/nginx/sbin/nginx -V
 ```
 
 ### Config
@@ -25,13 +52,6 @@ make && sudo make install
 ```sh
 #user  nobody;
 worker_processes  1;
-
-#error_log  logs/error.log;
-#error_log  logs/error.log  notice;
-#error_log  logs/error.log  info;
-
-#pid        logs/nginx.pid;
-
 
 events {
     worker_connections  1024;
@@ -75,21 +95,6 @@ http {
 }
 
 ```
-
-### troubleshooting on macOS
-
-Install automake and autoconf on your Unix.
-
-```sh
-brew install autoconf automake libtool pcre 
-```
-
-if `xcrun: error: invalid active developer path (/Library/Developer/CommandLineTools), missing xcrun at: /Library/Developer/CommandLineTools/usr/bin/xcrun`
-
-```sh
-xcode-select --install
-```
-
 ### Start and Stop Nginx
 
 Starting Nginx
@@ -114,6 +119,8 @@ https://websistent.com/tools/htdigest-generator-tool/
 
 ```shell
 docker run --name my-nginx -p 9999:80 -v /Users/blackie/Desktop/repo/nginx-simple-auth/nginx/config/default.conf:/etc/nginx/nginx.conf:ro -v /Users/blackie/Desktop/repo/nginx-simple-auth/nginx/html:/usr/share/nginx/html nginx
+
+docker run --name my-nginx -p 9999:80 ubuntu:21.04
 
 ```
 
